@@ -1,34 +1,28 @@
 import os
 from pathlib import Path
 
-# =========================
-# Base Directory
-# =========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# =========================
-# Security / Environment
-# =========================
+# ==== Security / Environment ====
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-unsafe-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
-# Allowed hosts
-# - Remove any scheme (http/https), only use domain or IP
-_raw_hosts = os.getenv("DJANGO_ALLOWED_HOSTS", "122.255.40.206,piriven.moe.gov.lk")
-ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
+# Allow single or comma-separated env vars:
+_raw_hosts = os.getenv("DJANGO_ALLOWED_HOSTS") or os.getenv("DJANGO_ALLOWED_HOST", "127.0.0.1,localhost")
+ALLOWED_HOSTS = ["*"] if _raw_hosts.strip() == "*" else [h.strip() for h in _raw_hosts.split(",") if h.strip()]
 
-# =========================
-# Installed Apps
-# =========================
+# ==== Apps ====
 INSTALLED_APPS = [
-    "jazzmin",  # Admin theme, must come before django.contrib.admin
+    # Admin theme (must be before django.contrib.admin)
+    "jazzmin",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
+
     # Third-party
     "rest_framework",
     "corsheaders",
@@ -38,11 +32,10 @@ INSTALLED_APPS = [
     "apps.content",
 ]
 
-# =========================
-# Middleware
-# =========================
+# ==== Middleware ====
+# NOTE: Place CorsMiddleware as high as possible and BEFORE CommonMiddleware.
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # high priority
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -72,19 +65,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "piriven_backend.wsgi.application"
 
-# =========================
-# Database
-# =========================
+# ==== Database ====
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",  # dev only
+        "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
-# =========================
-# Password Validators
-# =========================
+# ==== Password validation ====
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -92,71 +81,55 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# =========================
-# Internationalization
-# =========================
+# ==== I18N / TZ ====
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# =========================
-# Static & Media
-# =========================
+# ==== Static & Media ====
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
-STATICFILES_DIRS = [BASE_DIR / "assets"]  # dev-only assets
+# If you keep extra project assets here, ensure the folder exists:
+STATICFILES_DIRS = [BASE_DIR / "assets"]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# =========================
-# REST Framework
-# =========================
+# ==== DRF ====
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "PAGE_SIZE_QUERY_PARAM": "page_size",
 }
 
-# =========================
-# CORS / CSRF
-# =========================
-# For dev: Next.js frontend running locally
+# ==== CORS (for Next.js dev on 8080) ====
 CORS_ALLOWED_ORIGINS = [
-    "https://piriven.moe.gov.lk",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://122.255.40.206:8000",
 ]
+CORS_ALLOW_CREDENTIALS = True  # fine for dev; in prod, set only if you actually use cookies
 
-# Add public server IP for testing in dev (HTTP only)
-if DEBUG:
-    CORS_ALLOWED_ORIGINS.append("http://122.255.40.206:8000")
-
-CORS_ALLOW_CREDENTIALS = True
-
-# CSRF trusted origins
+# If you will POST with cookies/CSRF from 8080, add:
 CSRF_TRUSTED_ORIGINS = [
-    "https://piriven.moe.gov.lk",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "https://122.255.40.206:8000",
+
 ]
 
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS.append("http://122.255.40.206:8000")
-
-# =========================
-# Jazzmin Admin Customization
-# =========================
+# ==== Jazzmin Admin customization ====
 JAZZMIN_SETTINGS = {
     "site_title": "Admin",
     "site_header": "Admin",
     "site_brand": "Admin",
     "welcome_sign": "Site Content Management",
+    # Branding graphics (paths are relative to STATIC_URL)
     "site_logo": None,
     "site_icon": None,
     "copyright": "",
@@ -171,6 +144,7 @@ JAZZMIN_SETTINGS = {
         {"name": "View site", "url": "/", "new_window": True},
     ],
     "icons": {
+        # content app
         "apps.content": "fas fa-layer-group",
         "content.Album": "fas fa-images",
         "content.GalleryImage": "far fa-image",
@@ -184,8 +158,10 @@ JAZZMIN_SETTINGS = {
         "content.ExternalLink": "fas fa-link",
         "content.HeroSlide": "fas fa-photo-video",
         "content.NewsletterSubscription": "far fa-envelope",
+        # library app (new publications)
         "library.PublicationEntry": "fas fa-book",
         "library.PublicationCategory": "fas fa-book-open",
+        # auth
         "auth.User": "fas fa-user",
         "auth.Group": "fas fa-users",
     },
@@ -209,7 +185,7 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
     "dark_mode_theme": None,
     "navbar": "navbar-dark bg-black",
-    "sidebar": "sidebar-dark-danger",
+    "sidebar": "sidebar-dark-danger",  # dark red accent like frontend
     "brand_colour": "navbar-dark bg-black",
     "accent": "danger",
     "actions_sticky_top": True,
@@ -222,3 +198,4 @@ JAZZMIN_UI_TWEAKS = {
         "danger": "btn btn-outline-danger",
     },
 }
+
