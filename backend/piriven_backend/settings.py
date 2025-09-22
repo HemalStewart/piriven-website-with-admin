@@ -111,6 +111,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://122.255.40.206:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True  # fine for dev; in prod, set only if you actually use cookies
 
@@ -118,6 +119,8 @@ CORS_ALLOW_CREDENTIALS = True  # fine for dev; in prod, set only if you actually
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "https://122.255.40.206:8000",
+
 ]
 
 # ==== Jazzmin Admin customization ====
